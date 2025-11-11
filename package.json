@@ -1,0 +1,25 @@
+{
+  "name": "factorial-calendar-slack",
+  "version": "1.0.0",
+  "description": "Slack app to announce weekly events from factorial calendar",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/weorbitant/factorial-calendar-slack.git"
+  },
+  "author": "Jose Vicente Giner (GentooXativa)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/weorbitant/factorial-calendar-slack/issues"
+  },
+  "homepage": "https://github.com/weorbitant/factorial-calendar-slack#readme",
+  "dependencies": {
+    "@slack/socket-mode": "^2.0.5",
+    "@slack/web-api": "^7.12.0",
+    "dotenv": "^17.2.3",
+    "node-ical": "^0.22.1"
+  }
+}
