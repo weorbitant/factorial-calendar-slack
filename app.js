@@ -63,6 +63,15 @@ function findNextWeeksEvents(calendarData) {
 }
 
 /**
+ * Formats a date as DD/MM
+ */
+function formatDate(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${day}/${month}`;
+}
+
+/**
  * Converts a matcher pattern from config to a regex pattern
  * %s is replaced with a capture group for strings
  * %d is replaced with a capture group for digits
@@ -231,7 +240,7 @@ function organizeEvents(events) {
         console.log('\nFirst Days:');
         const firstDayTexts = [];
         organizedThisWeek.firstDay.forEach(({ event, data }) => {
-            const text = `  - ${data.name} (${event.start.toDateString()})`;
+            const text = `  - ${data.name} (${formatDate(event.start)})`;
             firstDayTexts.push(text);
             console.log(text);
         });
@@ -260,7 +269,7 @@ function organizeEvents(events) {
         console.log('\nBirthdays:');
         const birthdayTexts = [];
         organizedThisWeek.birthdays.forEach(({ event, data }) => {
-            const text = `  - ${data.name} (${event.start.toDateString()})`;
+            const text = ` - ${data.name} (${formatDate(event.start)})`;
             birthdayTexts.push(text);
             console.log(text);
         });
@@ -287,8 +296,8 @@ function organizeEvents(events) {
         console.log('\nAnniversaries:');
         anniversariesTexts = [];
         organizedThisWeek.anniversaries.forEach(({ event, data }) => {
-            anniversariesTexts.push(`  - ${data.name} - ${data.years} year(s) (${event.start.toDateString()})`);
-            console.log(`  - ${data.name} - ${data.years} year(s) (${event.start.toDateString()})`);
+            anniversariesTexts.push(`  - ${data.name} - ${data.years} año(s) (${formatDate(event.start)})`);
+            console.log(`  - ${data.name} - ${data.years} year(s) (${formatDate(event.start)})`);
         });
 
         slackMessage.blocks.push({
@@ -315,8 +324,8 @@ function organizeEvents(events) {
         console.log('\nLeaves:');
         const leaveTexts = [];
         organizedThisWeek.leaves.forEach(({ event, data }) => {
-            leaveTexts.push(`  - ${data.name} - ${data.days} day(s) (${event.start.toDateString()})`);
-            console.log(`  - ${data.name} - ${data.days} day(s) (${event.start.toDateString()})`);
+            leaveTexts.push(`  - ${data.name} - ${data.days} día(s) (${formatDate(event.start)})`);
+            console.log(`  - ${data.name} - ${data.days} día(s) (${formatDate(event.start)})`);
         });
 
         slackMessage.blocks.push({
@@ -345,8 +354,8 @@ function organizeEvents(events) {
         const holidayTexts = [];
 
         organizedThisWeek.holidays.forEach(({ event }) => {
-            holidayTexts.push(`  - ${event.summary} (${event.start.toDateString()})`);
-            console.log(`  - ${event.summary} (${event.start.toDateString()})`);
+            holidayTexts.push(`  - ${event.summary} (${formatDate(event.start)})`);
+            console.log(`  - ${event.summary} (${formatDate(event.start)})`);
 
         });
 
@@ -363,37 +372,75 @@ function organizeEvents(events) {
     if (organizedNextWeek.firstDay.length > 0) {
         console.log('\nFirst Days:');
         organizedNextWeek.firstDay.forEach(({ event, data }) => {
-            console.log(`  - ${data.name} (${event.start.toDateString()})`);
+            console.log(`  - ${data.name} (${formatDate(event.start)})`);
         });
     }
     if (organizedNextWeek.birthdays.length > 0) {
         console.log('\nBirthdays:');
         organizedNextWeek.birthdays.forEach(({ event, data }) => {
-            console.log(`  - ${data.name} (${event.start.toDateString()})`);
+            console.log(`  - ${data.name} (${formatDate(event.start)})`);
         });
     }
     if (organizedNextWeek.anniversaries.length > 0) {
         console.log('\nAnniversaries:');
         organizedNextWeek.anniversaries.forEach(({ event, data }) => {
-            console.log(`  - ${data.name} - ${data.years} year(s) (${event.start.toDateString()})`);
+            console.log(`  - ${data.name} - ${data.years} year(s) (${formatDate(event.start)})`);
         });
     }
     if (organizedNextWeek.leaves.length > 0) {
         console.log('\nLeaves:');
         organizedNextWeek.leaves.forEach(({ event, data }) => {
-            console.log(`  - ${data.name} - ${data.days} day(s) (${event.start.toDateString()})`);
+            console.log(`  - ${data.name} - ${data.days} day(s) (${formatDate(event.start)})`);
         });
     }
     if (organizedNextWeek.holidays.length > 0) {
+        slackMessage.blocks.push({ type: "divider" });
+        slackMessage.blocks.push({
+            "type": "section",
+            "fields": [
+                {
+                    "type": "mrkdwn",
+                    "text": ":homer-whoohoo: *Días festivos para la próxima semana:*"
+                }
+            ]
+        });
+
+        const nextWeekHolidayTexts = [];
+
+        organizedNextWeek.holidays.forEach(({ event }) => {
+            nextWeekHolidayTexts.push(`  - ${event.summary} (${formatDate(event.start)})`);
+        });
+
+        slackMessage.blocks.push({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": nextWeekHolidayTexts.join('\n')
+            }
+        });
+
         console.log('\nHolidays:');
         organizedNextWeek.holidays.forEach(({ event }) => {
-            console.log(`  - ${event.summary} (${event.start.toDateString()})`);
+            console.log(`  - ${event.summary} (${formatDate(event.start)})`);
         });
     }
 
     // Connect to Slack
     await socketModeClient.start();
 
-    // Post the message
-    const result = await webClient.chat.postMessage(slackMessage);
+    try {
+        // Post the message
+        const result = await webClient.chat.postMessage(slackMessage);
+        console.log(`Message has been sent`);
+
+        // Clean up and exit
+
+        await socketModeClient.disconnect();
+        process.exit(0);
+
+    } catch (error) {
+        console.error(`Error sending message: ${error}`);
+        await socketModeClient.disconnect();
+        process.exit(1);
+    }
 })();
